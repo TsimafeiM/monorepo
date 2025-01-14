@@ -29,4 +29,21 @@ public class StringCalculatorTest {
     public void TestDelimiteurPerso() {
         Assertions.assertEquals(6, StringCalculator.Add("\\;\n1,2;3"));
     }
+
+    @Test
+    public void TestNombresNegatifs() {
+        RuntimeException runtimeException = Assertions.assertThrows(RuntimeException.class, () -> StringCalculator.Add("-5,2,-10,9"));
+        Assertions.assertEquals("Les nombres négatifs ne sont pas autorisés : -5,-10", runtimeException.getMessage());
+    }
+
+    @Test
+    public void TestNombresNegatifsWithDelimteur() {
+        RuntimeException runtimeException = Assertions.assertThrows(RuntimeException.class, () -> StringCalculator.Add("\\;,-5,2;-10,9"));
+        Assertions.assertEquals("Les nombres négatifs ne sont pas autorisés : -5,-10", runtimeException.getMessage());
+    }
+
+    @Test
+    public void TestIgnoreOver1000() {
+        Assertions.assertEquals(6, StringCalculator.Add("1,2,3,1000"));
+    }
 }
