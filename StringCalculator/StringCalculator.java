@@ -1,103 +1,64 @@
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringCalculator {
 
-    public static int Add(String input){
+    public static int add(String input){
         if(input.isBlank()){
             return 0;
         }
-        String delimiteur = getDelimiteur(input);
-        String normalizedInput = normalizeInput(input, !delimiteur.isBlank());
-        String[] splittedInput = normalizedInput.split(",");
-        negativeNumbersCheck(splittedInput, delimiteur);
-        return calculateNumbers(splittedInput, delimiteur);
+        String delimiteurs = allDelimiteursRegex(input);
+        String[] splittedInput = input.split(delimiteurs);
+        negativeNumbersCheck(splittedInput);
+        return calculateNumbers(splittedInput);
     }
 
-    protected static int calculateNumbers(String[] splittedInput, String delimiteur) {
+    protected static int calculateNumbers(String[] splittedInput) {
         int total = 0;
-        for(String splittedString : splittedInput){
-            //gestion du delimiteur custom
-                if(notNumeric(splittedString) && !delimiteur.isBlank()){
-                    String[] resplittedString = splittedString.split(delimiteur);
-                    total = addStringToTotal(resplittedString[0], total);
-                    total = addStringToTotal(resplittedString[1], total);
-                }else {
-                    total = addStringToTotal(splittedString, total);
-                }
-        }
-        return total;
-    }
-
-    private static int addStringToTotal(String splittedString, int total) {
-        int parsedInt = Integer.parseInt(splittedString);
-        if(parsedInt < 1000){
-            total += parsedInt;
-        }
-        return total;
-    }
-
-    protected static void negativeNumbersCheck(String[] splittedInput, String delimiteur) {
-        StringBuilder negativeNumbers = new StringBuilder();
-        int negativesCount = 0;
-        for(String splittedString : splittedInput){
-            //gestion du delimiteur custom
-            if(notNumeric(splittedString) && !delimiteur.isBlank()){
-                for(String resplittedString : splittedString.split(delimiteur)){
-                    negativesCount = handleNegatives(resplittedString, negativesCount, negativeNumbers);
-                }
-            }else {
-                negativesCount = handleNegatives(splittedString, negativesCount, negativeNumbers);
+        List<Integer> parsedSplittedIntegers = Arrays.stream(splittedInput)
+                .filter(StringCalculator::isNumeric)
+                .map(Integer::parseInt)
+                .toList();
+        for(Integer splittedIntegers : parsedSplittedIntegers){
+            if(splittedIntegers < 1000){
+                total += splittedIntegers;
             }
         }
+        return total;
+    }
+
+    protected static void negativeNumbersCheck(String[] splittedInput) {
+        List<String> negativesList = Arrays.stream(splittedInput).filter(s -> s.contains("-")).toList();
         String exceptionText;
+        long negativesCount = negativesList.size();
         if(negativesCount > 0){
             exceptionText = "Les nombres négatifs ne sont pas autorisés";
             if(negativesCount > 1){
-                exceptionText = exceptionText + " : " + negativeNumbers;
+                String nombresNegatifs = String.join(",", negativesList);
+                exceptionText = exceptionText + " : " + nombresNegatifs;
             }
             throw new RuntimeException(exceptionText);
         }
     }
 
-    private static int handleNegatives(String resplittedString, int countNegatives, StringBuilder negativeNumbers) {
-        // "" donne 0
-        int parsedInt = Integer.parseInt(resplittedString);
-        if(parsedInt <= 0){
-            appendNegativeNumbersWithCommas(resplittedString, countNegatives, negativeNumbers);
-            countNegatives++;
-        }
-        return countNegatives;
-    }
-
-    private static void appendNegativeNumbersWithCommas(String resplittedString, int countNegatives, StringBuilder negativeNumbers) {
-        if(countNegatives == 0){
-            negativeNumbers.append(resplittedString);
-        }else {
-            negativeNumbers.append(",");
-            negativeNumbers.append(resplittedString);
-        }
-    }
-
-    private static boolean notNumeric(String str) {
+    private static boolean isNumeric(String str) {
         try {
             Integer.parseInt(str);
-            return false;
-        } catch(NumberFormatException e){
             return true;
+        } catch(NumberFormatException e){
+            return false;
         }
     }
 
-    private static String normalizeInput(String input, boolean hasDelimiter) {
-        if(hasDelimiter){
-            input = input.substring(3);
+    protected static String allDelimiteursRegex(String input) {
+        String delimiter = "";
+        Pattern pattern = Pattern.compile("\\\\(.)");
+        Matcher matcher = pattern.matcher(input);
+        if(matcher.find()){
+            delimiter = matcher.group(1);
         }
-        return input.replaceAll("\n", ",");
-    }
-
-    protected static String getDelimiteur(String input) {
-        int indexOfDelim = input.indexOf("\\");
-        String delimiteur = "";
-        if (indexOfDelim != -1){
-            delimiteur = input.substring(indexOfDelim+1,indexOfDelim+2);
-        }
-        return delimiteur;
+        return "[" + delimiter + ",\n]";
     }
 }
