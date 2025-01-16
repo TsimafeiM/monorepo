@@ -1,18 +1,26 @@
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 class StringCalculatorTest {
 
-    @Test
-    void test012Sum() {
-        Assertions.assertEquals(0, StringCalculator.add(""));
-        Assertions.assertEquals(1, StringCalculator.add("1"));
-        Assertions.assertEquals(3, StringCalculator.add("1,2"));
+    static Stream<Arguments> testDataSimpleSum() {
+        return Stream.of(
+                Arguments.of(0, "0"),
+                Arguments.of(1, "1"),
+                Arguments.of(3, "3"),
+                Arguments.of(15, "1,2,3,4,5")
+        );
     }
 
-    @Test
-    void test012345Sum() {
-        Assertions.assertEquals(15, StringCalculator.add("1,2,3,4,5"));
+    @ParameterizedTest
+    @MethodSource("testDataSimpleSum")
+    void testSimpleSum(int expected, String entry) {
+        Assertions.assertEquals(expected, StringCalculator.add(entry));
     }
 
     @Test
